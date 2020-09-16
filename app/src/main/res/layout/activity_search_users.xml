@@ -36,12 +36,27 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:gravity="center"
+        android:textSize="14sp"
         android:padding="4dp"
         android:textColor="@android:color/black"
-        tools:text="Check your network status and retry again" />
+        android:text="@string/network_error" />
+
+    <TextView
+        android:id="@+id/empty_query_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/retry_button"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:padding="4dp"
+        android:textColor="@android:color/black"
+        android:text="@string/try_to_search_something" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list"
+        android:id="@+id/search_result_recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:paddingVertical="@dimen/row_item_margin_vertical"
@@ -68,7 +83,7 @@
         app:startIconDrawable="@drawable/ic_baseline_search_24">
 
         <EditText
-            android:id="@+id/search_repo"
+            android:id="@+id/search_user"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/search_hint"

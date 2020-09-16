@@ -2,4 +2,7 @@
     <string name="app_name">M17 Task</string>
     <string name="search_hint">GitHub Users</string>
     <string name="retry">Retry</string>
+    <string name="loading">Loading</string>
+    <string name="network_error">Make sure you are connected to the internet \nthen retry again</string>
+    <string name="try_to_search_something">Yo! Try to search something</string>
 </resources>
