@@ -1,21 +1,26 @@
 package com.example.m17task
 
 import android.app.Application
-import com.example.m17task.di.AppInjector
-import dagger.android.AndroidInjector
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasAndroidInjector
-import javax.inject.Inject
+import com.example.m17task.di.AppComponent
+import com.example.m17task.di.DaggerAppComponent
 
-class MainApp : Application(), HasAndroidInjector {
+class MainApp : Application() {
 
-    @Inject
-    lateinit var dispatchAndroidInjector: DispatchingAndroidInjector<Any>
+    private var appComponent: AppComponent? = null
 
     override fun onCreate() {
         super.onCreate()
-        AppInjector.init(this)
     }
 
-    override fun androidInjector(): AndroidInjector<Any> = dispatchAndroidInjector
+    fun getAppComponent(): AppComponent {
+        if (appComponent == null) {
+            synchronized(this) {
+                if (appComponent == null) {
+                    appComponent = DaggerAppComponent.builder().build()
+                }
+            }
+        }
+
+        return requireNotNull(appComponent)
+    }
 }
