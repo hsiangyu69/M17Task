@@ -14,7 +14,6 @@ import com.example.m17task.model.User
 
 class UserViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-    private var user: User? = null
     private val userName: TextView = view.findViewById(R.id.user_name_textView)
     private val avatarImage: ImageView = view.findViewById(R.id.avatar_image)
 

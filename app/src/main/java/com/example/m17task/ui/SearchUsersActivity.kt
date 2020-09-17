@@ -85,7 +85,9 @@ class SearchUsersActivity : AppCompatActivity() {
 
     private fun initSearchUsersList() {
         // assign adapter
-        search_result_recyclerView.adapter = usersAdapter
+//        search_result_recyclerView.adapter = usersAdapter
+        search_result_recyclerView.adapter =
+            usersAdapter.withLoadStateFooter(footer = UserLoadStateAdapter { usersAdapter.retry() })
 
         // add dividers between RecyclerView's row items
         val decoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
