@@ -7,8 +7,10 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
+import androidx.paging.PagingData
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.example.m17task.R
 import dagger.Lazy
@@ -36,16 +38,49 @@ class SearchUsersActivity : AppCompatActivity() {
         // get view model
         searchUsersViewModel = getViewModel(searchUsersViewModelCreator)
 
-        initSearchUsersList()
+        initView()
+        observeViewAction()
         val query = savedInstanceState?.getString(LAST_SEARCH_QUERY) ?: ""
-        search(query)
         initSearch(query)
-        retry_button.setOnClickListener { usersAdapter.retry() }
+        search(query)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(LAST_SEARCH_QUERY, search_user.text.trim().toString())
+    }
+
+    private fun initView() {
+        retry_button.setOnClickListener {
+            searchUsersViewModel.retrySearch.call()
+        }
+        input_layout.setEndIconOnClickListener {
+            searchUsersViewModel.cancelSearch.call()
+        }
+        initSearchUsersList()
+    }
+
+    private fun observeViewAction() {
+        searchUsersViewModel.retrySearch.observe(this, Observer {
+            usersAdapter.retry()
+        })
+        searchUsersViewModel.cancelSearch.observe(this, Observer {
+            search_user.text.clear()
+            lifecycleScope.launch {
+                usersAdapter.submitData(PagingData.empty())
+                error_message.isVisible = true
+                searchUsersViewModel.handleErrorState(ErrorState.EmptyQuery)
+            }
+        })
+
+        searchUsersViewModel.errorState.observe(this, Observer { state ->
+            var errorMessage = when (state) {
+                is ErrorState.APIFail -> getString(R.string.network_error)
+                ErrorState.EmptyQuery -> getString(R.string.try_to_search_something)
+                ErrorState.EmptySearchResult -> getString(R.string.no_search_result)
+            }
+            error_message.text = errorMessage
+        })
     }
 
     private fun initSearchUsersList() {
@@ -57,25 +92,24 @@ class SearchUsersActivity : AppCompatActivity() {
         search_result_recyclerView.addItemDecoration(decoration)
 
         usersAdapter.addLoadStateListener { loadState ->
-            // show the search result if loading succeeds
-            search_result_recyclerView.isVisible = loadState.source.refresh is LoadState.NotLoading
             // show progress bar during loading or refresh
             progress_bar.isVisible = loadState.source.refresh is LoadState.Loading
+            // show the search result if loading succeeds
+            search_result_recyclerView.isVisible = loadState.source.refresh is LoadState.NotLoading
             // show retry button when loading fail
             retry_button.isVisible = loadState.source.refresh is LoadState.Error
-            error_message.isVisible = loadState.source.refresh is LoadState.Error
-
-            val errorState = loadState.source.append as? LoadState.Error
-                ?: loadState.source.prepend as? LoadState.Error
-                ?: loadState.append as? LoadState.Error
-                ?: loadState.prepend as? LoadState.Error
-
-            errorState?.let {
-                Toast.makeText(
-                    this,
-                    "Wooops ${it.error}",
-                    Toast.LENGTH_LONG
-                ).show()
+            // empty result
+            val isEmptyResult =
+                loadState.source.refresh is LoadState.NotLoading && usersAdapter.itemCount < 1
+            // show error message when api fail or empty result
+            error_message.isVisible = loadState.source.refresh is LoadState.Error || isEmptyResult
+            if (error_message.isVisible) {
+                when {
+                    loadState.source.refresh is LoadState.Error -> searchUsersViewModel.handleErrorState(
+                        ErrorState.APIFail
+                    )
+                    isEmptyResult -> searchUsersViewModel.handleErrorState(ErrorState.EmptySearchResult)
+                }
             }
         }
     }
@@ -111,12 +145,12 @@ class SearchUsersActivity : AppCompatActivity() {
     }
 
     private fun search(query: String) {
+        error_message.isVisible = query.isEmpty()
         if (query.isEmpty()) {
-            empty_query_message.isVisible = true
+            searchUsersViewModel.handleErrorState(ErrorState.EmptyQuery)
             return
-        } else {
-            empty_query_message.isVisible = false
         }
+
         // make sure we cancel the previous job before creating a new one
         searchJob?.cancel()
         searchJob = lifecycleScope.launch {
