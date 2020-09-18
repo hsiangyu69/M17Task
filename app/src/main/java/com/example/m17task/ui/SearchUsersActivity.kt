@@ -72,7 +72,7 @@ class SearchUsersActivity : AppCompatActivity() {
         })
 
         searchUsersViewModel.errorState.observe(this, Observer { state ->
-            var errorMessage = when (state) {
+            val errorMessage = when (state) {
                 is ErrorState.APIFail -> getString(R.string.network_error)
                 ErrorState.EmptyQuery -> getString(R.string.try_to_search_something)
                 ErrorState.EmptySearchResult -> getString(R.string.no_search_result)
