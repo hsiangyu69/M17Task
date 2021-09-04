@@ -6,3 +6,4 @@ Implement an Android application including search and display users from GitHub 
 - MVVM architecture
 - Dagger2 for injection
 - kotlin flows and coroutines
+- revert test
